@@ -1,0 +1,66 @@
+table Reviews
+	lineageTag: 907b9033-b749-4c16-9633-e56ad466c12a
+
+	column order_id
+		dataType: string
+		lineageTag: 23a6d94e-4d50-43b8-b8dd-733b930305f4
+		summarizeBy: none
+		sourceColumn: order_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReviewScore
+		dataType: double
+		lineageTag: d21c73d6-b7f1-401b-866d-2269aa80bf6b
+		summarizeBy: sum
+		sourceColumn: ReviewScore
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column Title
+		dataType: string
+		lineageTag: 49fbd878-42bc-4009-be67-a9ff27c97b7c
+		summarizeBy: none
+		sourceColumn: Title
+
+		annotation SummarizationSetBy = Automatic
+
+	column Comment
+		dataType: string
+		lineageTag: 0a90ebad-238c-4b83-a1d9-a63399585de9
+		summarizeBy: none
+		sourceColumn: Comment
+
+		annotation SummarizationSetBy = Automatic
+
+	column ReviewDateId
+		dataType: double
+		lineageTag: 39bb8d7a-940a-4c58-bb4c-2e8da972dd99
+		summarizeBy: count
+		sourceColumn: ReviewDateId
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition Reviews = m
+		mode: import
+		source =
+				let
+				    Source = Csv.Document(File.Contents("C:\Users\ghale\Documents\DataSets\olist_order_reviews_dataset.csv\olist_order_reviews_dataset.csv"),[Delimiter=",", Columns=7, Encoding=65001, QuoteStyle=QuoteStyle.Csv]),
+				    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"review_id", type text}, {"order_id", type text}, {"review_score", Int64.Type}, {"review_comment_title", type text}, {"review_comment_message", type text}, {"review_creation_date", type datetime}, {"review_answer_timestamp", type datetime}}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Changed Type",{"review_answer_timestamp"}),
+				    #"Added Custom" = Table.AddColumn(#"Removed Columns", "ReviewCreationDateId", each Date.Year([review_creation_date]) * 10000 + Date.Month([review_creation_date]) * 100 + Date.Day([review_creation_date])),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Added Custom",{{"ReviewCreationDateId", Int64.Type}}),
+				    #"Removed Columns1" = Table.RemoveColumns(#"Changed Type1",{"review_id", "review_creation_date"}),
+				    #"Grouped Rows" = Table.Group(#"Removed Columns1", {"order_id"}, {{"ReviewScore", each List.Max([review_score]), type nullable number}, {"Title", each List.Max([review_comment_title]), type nullable text}, {"Comment", each List.Max([review_comment_message]), type nullable text}, {"ReviewDateId", each List.Max([ReviewCreationDateId]), type nullable number}})
+				in
+				    #"Grouped Rows"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

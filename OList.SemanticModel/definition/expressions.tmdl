@@ -1,0 +1,70 @@
+expression olist_customers_dataset =
+		let
+		    Source = Csv.Document(File.Contents("C:\Users\ghale\Documents\DataSets\olist_customers_dataset.csv\olist_customers_dataset.csv"),[Delimiter=",", Columns=5, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+		    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+		    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"customer_id", type text}, {"customer_unique_id", type text}, {"customer_zip_code_prefix", Int64.Type}, {"customer_city", type text}, {"customer_state", type text}})
+		in
+		    #"Changed Type"
+	lineageTag: b51854eb-6a8d-4f06-aa39-d8d426470f8d
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression olist_orders_dataset =
+		let
+		    Source = Csv.Document(File.Contents("C:\Users\ghale\Documents\DataSets\olist_orders_dataset.csv\olist_orders_dataset.csv"),[Delimiter=",", Columns=8, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+		    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+		    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"order_id", type text}, {"customer_id", type text}, {"order_status", type text}, {"order_purchase_timestamp", type datetime}, {"order_approved_at", type datetime}, {"order_delivered_carrier_date", type datetime}, {"order_delivered_customer_date", type datetime}, {"order_estimated_delivery_date", type datetime}})
+		in
+		    #"Changed Type"
+	lineageTag: f6b1131f-570a-4da5-846b-92fe3e55dd51
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression olist_order_items_dataset =
+		let
+		    Source = Csv.Document(File.Contents("C:\Users\ghale\Documents\DataSets\olist_order_items_dataset.csv\olist_order_items_dataset.csv"),[Delimiter=",", Columns=7, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+		    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+		    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"order_id", type text}, {"order_item_id", Int64.Type}, {"product_id", type text}, {"seller_id", type text}, {"shipping_limit_date", type datetime}, {"price", type number}, {"freight_value", type number}}),
+		    #"Renamed Columns" = Table.RenameColumns(#"Changed Type",{{"order_item_id", "OrderLine"}}),
+		    #"Added Custom" = Table.AddColumn(#"Renamed Columns", "ShippingLimitDateId", each Date.Year([shipping_limit_date]) * 10000 + Date.Month([shipping_limit_date]) * 100 + Date.Day([shipping_limit_date])),
+		    #"Removed Columns" = Table.RemoveColumns(#"Added Custom",{"shipping_limit_date"})
+		in
+		    #"Removed Columns"
+	lineageTag: 41bcfd02-1172-41dd-9377-9bc72d8efd81
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression olist_products_dataset =
+		let
+		    Source = Csv.Document(File.Contents("C:\Users\ghale\Documents\DataSets\olist_products_dataset.csv\olist_products_dataset.csv"),[Delimiter=",", Columns=9, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+		    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+		    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"product_id", type text}, {"product_category_name", type text}, {"product_name_lenght", Int64.Type}, {"product_description_lenght", Int64.Type}, {"product_photos_qty", Int64.Type}, {"product_weight_g", Int64.Type}, {"product_length_cm", Int64.Type}, {"product_height_cm", Int64.Type}, {"product_width_cm", Int64.Type}}),
+		    #"Removed Other Columns" = Table.SelectColumns(#"Changed Type",{"product_id", "product_category_name"})
+		in
+		    #"Removed Other Columns"
+	lineageTag: ccac1596-572d-4d5e-b7dc-4a03cac58391
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression product_category_name_translation =
+		let
+		    Source = Csv.Document(File.Contents("C:\Users\ghale\Documents\DataSets\product_category_name_translation.csv"),[Delimiter=",", Columns=2, Encoding=65001, QuoteStyle=QuoteStyle.None]),
+		    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", type text}, {"Column2", type text}}),
+		    #"Promoted Headers" = Table.PromoteHeaders(#"Changed Type", [PromoteAllScalars=true]),
+		    #"Changed Type1" = Table.TransformColumnTypes(#"Promoted Headers",{{"product_category_name", type text}, {"product_category_name_english", type text}})
+		in
+		    #"Changed Type1"
+	lineageTag: 3172358c-fbe5-4945-9129-e6b0afd0c7f7
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,43 @@
+table 'Time view'
+	lineageTag: f3555b74-4807-4f27-9ebf-3ac06a28875c
+
+	calculationGroup
+		precedence: 3
+
+		calculationItem YTD = IF(NOT(ISBLANK(SELECTEDMEASURE())),CALCULATE(TOTALYTD(SELECTEDMEASURE(),'Calendar'[Date])),BLANK())
+
+		calculationItem CY = SELECTEDMEASURE()
+
+		calculationItem PY = ```
+				
+				IF(
+				    NOT(ISBLANK(SELECTEDMEASURE())),
+				        COALESCE(CALCULATE(SELECTEDMEASURE(),SAMEPERIODLASTYEAR('Calendar'[Date])),0)
+				)
+				
+				```
+
+		calculationItem Variance =
+				SELECTEDMEASURE()-
+				IF(NOT(ISBLANK(selectedmeasure())),
+				    CALCULATE(SELECTEDMEASURE(),SAMEPERIODLASTYEAR('Calendar'[Date]))
+				)
+
+	column 'Calculation group column'
+		dataType: string
+		lineageTag: 181c7caf-3036-4e8f-b2f2-5112babc6ce6
+		summarizeBy: none
+		sourceColumn: Name
+		sortByColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ordinal
+		dataType: int64
+		formatString: 0
+		lineageTag: ff9c84d1-6236-45c2-a26a-2fa6e3dc1028
+		summarizeBy: sum
+		sourceColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+

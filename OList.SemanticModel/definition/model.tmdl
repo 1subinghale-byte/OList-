@@ -1,0 +1,29 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	discourageImplicitMeasures
+	sourceQueryCulture: en-GB
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBI_QueryOrder = ["olist_customers_dataset","olist_orders_dataset","olist_order_items_dataset","Orders","Customer","Calendar","olist_products_dataset","product_category_name_translation","Product","Payment","Reviews","Sellers","olist_orders_dataset (2)","Measures (2)"]
+
+annotation PBI_ProTooling = ["CalcGroup","DaxQueryView_Desktop","DevMode"]
+
+ref table Orders
+ref table Customer
+ref table Calendar
+ref table Product
+ref table Payment
+ref table Reviews
+ref table Sellers
+ref table 'olist_orders_dataset (2)'
+ref table 'Measures (2)'
+ref table 'Time view'
+ref table 'KPI Selector'
+
+ref cultureInfo en-US
+

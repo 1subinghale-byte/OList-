@@ -1,0 +1,51 @@
+table Customer
+	lineageTag: 1ea6537a-3008-4d81-849f-419eb3a038b0
+
+	column CustomerId
+		dataType: string
+		lineageTag: 8c028203-bfc0-434d-a297-99f992628557
+		summarizeBy: none
+		sourceColumn: CustomerId
+
+		annotation SummarizationSetBy = Automatic
+
+	column ZipCode
+		dataType: int64
+		formatString: 0
+		lineageTag: 1dcaca99-a612-4708-8243-4a0fbc658be4
+		summarizeBy: none
+		sourceColumn: ZipCode
+
+		annotation SummarizationSetBy = Automatic
+
+	column City
+		dataType: string
+		lineageTag: ee978329-2369-4b27-8a7d-679b0dd074c8
+		summarizeBy: none
+		sourceColumn: City
+
+		annotation SummarizationSetBy = Automatic
+
+	column State
+		dataType: string
+		lineageTag: ad419222-e078-46d9-9708-0d1e0b686135
+		summarizeBy: none
+		sourceColumn: State
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Customer = m
+		mode: import
+		source =
+				let
+				    Source = olist_customers_dataset,
+				    #"Removed Columns" = Table.RemoveColumns(Source,{"customer_id"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Columns", {"customer_unique_id"}),
+				    #"Renamed Columns" = Table.RenameColumns(#"Removed Duplicates",{{"customer_unique_id", "CustomerId"}, {"customer_zip_code_prefix", "ZipCode"}, {"customer_city", "City"}, {"customer_state", "State"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

@@ -1,0 +1,22 @@
+// Welcome to DAX query view! Learn more about DAX queries at https://aka.ms/dax-queries.
+// Right-click on tables, columns, or measures in the data pane to access quick queries, or ask Copilot for help writing DAX.
+EVALUATE
+VAR CY =
+    CALCULATE(
+        MAX('Calendar'[Year]),
+        FILTER(ALL('Calendar'), NOT(ISBLANK([Total Revenue])))
+    )
+RETURN
+TOPN(
+    10,
+    CALCULATETABLE(
+        SUMMARIZECOLUMNS(
+            'Product'[product_id],
+            "Total Revenue", [Total Revenue]
+        ),
+        'Calendar'[Year] = CY
+    ),
+    [Total Revenue],
+    DESC
+
+)

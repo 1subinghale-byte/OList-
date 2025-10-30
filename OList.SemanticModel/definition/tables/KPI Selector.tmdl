@@ -1,0 +1,32 @@
+table 'KPI Selector'
+	lineageTag: 6a21cf83-316a-4aab-bfa8-f2a8670e64b2
+
+	calculationGroup
+		precedence: 2
+
+		calculationItem Revenue = [Revenue (TY)]
+
+		calculationItem AOV = [AOV]
+
+		calculationItem 'Items Sold' = [Items Sold]
+
+		calculationItem AIPB = [Avg No of Items in Basket (TY)]
+
+	column KPI
+		dataType: string
+		lineageTag: a35c663e-53f8-4581-8a68-68f054860f45
+		summarizeBy: none
+		sourceColumn: Name
+		sortByColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+
+	column Ordinal
+		dataType: int64
+		formatString: 0
+		lineageTag: 0de71178-eaa8-4bb8-be72-70e4941fbae2
+		summarizeBy: sum
+		sourceColumn: Ordinal
+
+		annotation SummarizationSetBy = Automatic
+

@@ -1,0 +1,271 @@
+table 'Measures (2)'
+	lineageTag: c3b7ad94-c721-4135-8a6f-a882d3e0a7aa
+
+	measure 'Total Revenue' = SUM(Orders[Total Price])
+		formatString: "£"#,0.00;-"£"#,0.00;"£"#,0.00
+		lineageTag: f7c069e3-15c1-4c47-9b17-1a0c0358d793
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Revenue (TY)' = ```
+			
+			CALCULATE(
+			    [Total Revenue],
+			    USERELATIONSHIP(Orders[PurchaseDateId], 'Calendar'[DateId])
+			)
+			
+			```
+		displayFolder: Time Series Calculations
+		lineageTag: e8da6c29-5615-401b-9a9e-eb324b94c8bd
+
+	measure 'Avg No of Items in Basket (TY)' = ```
+			
+			VAR basketCount = DISTINCTCOUNT(Orders[order_id])
+			VAR itemSold = COUNT(Orders[product_id])
+			return 
+			IF(NOT(ISBLANK([Revenue (TY)])),
+			DIVIDE(itemSold,basketCount),
+			BLANK())
+			```
+		displayFolder: Time Series Calculations
+		lineageTag: b13aabee-6125-4a68-9834-3178a7b83373
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Min Order Value' = MINX(Orders,[Revenue (TY)])
+		displayFolder: Time Series Calculations
+		lineageTag: 3c57a50c-c35a-4000-8f04-90219f239a4d
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Max Order Value' = MAXX(Orders,[Revenue (TY)])
+		displayFolder: Time Series Calculations
+		lineageTag: 8ecd08d4-e4e6-49ea-a42f-8bbeeb1cf06c
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Average Order Value (TY)' = AVERAGEX(Orders, [Revenue (TY)])
+		formatString: "£"#,0.00;-"£"#,0.00;"£"#,0.00
+		displayFolder: Time Series Calculations
+		lineageTag: 91094167-8344-498f-9825-60159716a7b1
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Total Revnue YTD' = ```
+			IF(
+			    NOT(ISBLANK([Revenue (TY)])),TOTALYTD([Revenue (TY)],'Calendar'[Date]),
+			    BLANK()
+			)
+			
+			```
+		formatString: "£"#,0.###############;-"£"#,0.###############;"£"#,0.###############
+		displayFolder: Time Series Calculations
+		lineageTag: 9cea02db-a1ff-4af5-9882-85ed45cf50b8
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Total Revenue MTD' = TOTALMTD([Total Revenue],'Calendar'[Date])
+		formatString: "£"#,0.00;-"£"#,0.00;"£"#,0.00
+		displayFolder: Time Series Calculations
+		lineageTag: 579909ab-59b7-4080-adb0-0ed614081592
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Revenue (LY)' = ```
+			
+			 IF(
+			    NOT(ISBLANK([Revenue (TY)])),
+			CALCULATE([Revenue (TY)],SAMEPERIODLASTYEAR('Calendar'[Date])),
+			BLANK())
+			```
+		formatString: "£"#,0.###############;-"£"#,0.###############;"£"#,0.###############
+		displayFolder: Time Series Calculations
+		lineageTag: ad2f8f4a-74d8-4f41-ac59-9200d8937dad
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Revenue Variance' =
+			
+			[Revenue (TY)]-[Revenue (LY)]
+		formatString: "£"#,0.###############;-"£"#,0.###############;"£"#,0.###############
+		displayFolder: Time Series Calculations
+		lineageTag: f3f58af8-cafe-47f8-87ea-0694ca62a602
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Average Order Value (LY)' =
+			IF(
+			    NOT(ISBLANK([Revenue (TY)])),
+			CALCULATE([Average Order Value (TY)],SAMEPERIODLASTYEAR('Calendar'[Date])),
+			BLANK()
+			)
+		formatString: "£"#,0.00;-"£"#,0.00;"£"#,0.00
+		displayFolder: Time Series Calculations
+		lineageTag: 7588afeb-4cef-4bd2-a843-4a149c0538ee
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	measure 'Avg No of Items in Basket (LY)' =
+			IF(NOT(ISBLANK([Revenue (TY)])),
+			CALCULATE([Avg No of Items in Basket (TY)],SAMEPERIODLASTYEAR('Calendar'[Date])),
+			BLANK()
+			)
+		formatString: #,0.00
+		displayFolder: Time Series Calculations
+		lineageTag: cd427edd-6213-48bf-9d73-bb6f360cbe3d
+
+	measure 'Top Selling Products' = ```
+			
+			VAR CY =
+			    CALCULATE(
+			        MAX('Calendar'[Year]),
+			        FILTER(ALL('Calendar'), NOT(ISBLANK([Total Revenue])))
+			    )
+			VAR TOPS =
+			TOPN(
+			    10,
+			    CALCULATETABLE(
+			        SUMMARIZECOLUMNS(
+			            'Product'[product_id],
+			            "Total Revenue", [Total Revenue]
+			        ),
+			        'Calendar'[Year] = CY
+			    ),
+			    [Total Revenue],
+			    DESC
+			)
+			
+			RETURN 
+			SUMX(TOPS,[Total Revenue])
+			
+			```
+		lineageTag: 985ecd75-a3a4-4f91-ba8b-0d67e25f6be4
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'top 10 rank' =
+			
+			VAR CY = CALCULATE(MAX('Calendar'[Year]),FILTER(ALL('Calendar'[Date]),NOT(ISBLANK([Total Revenue]))))
+			RETURN
+			IF(ISINSCOPE('Product'[product_id]),
+			RANKX(ALLSELECTED('Product'[product_id]),
+			   CALCULATE(sum(Orders[Total Price]),'Calendar'[Year] = CY),,DESC))
+		lineageTag: 685269f0-741b-4ab5-952f-9e56ab904e23
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Selected KPI Measure' = SELECTEDMEASURE()
+		lineageTag: 7b68b1dc-7126-422a-8786-aa82459f7fee
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Sales YTD' = ```
+			
+			var maxyr = CALCULATE(
+			    MAX('Calendar'[Year]),
+			    FILTER(ALL('Calendar'),
+			    NOT(ISBLANK([Total Revenue])
+			    )))
+			RETURN
+			CALCULATE([Total Revenue],FILTER(ALL('Calendar'[Year]),'Calendar'[Year] = maxyr))
+			
+			```
+		lineageTag: dcf40866-181a-4742-903c-8145c1b86980
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Sales VS LY' = ```
+			
+			var maxyr = CALCULATE(
+			    MAX('Calendar'[Year]),
+			    FILTER(ALL('Calendar'),
+			    NOT(ISBLANK([Total Revenue])
+			    )))
+			VAR SALESLY = 
+			CALCULATE([Total Revenue],FILTER(ALL('Calendar'[Year]),'Calendar'[Year] = maxyr-1))
+			RETURN
+			DIVIDE([Sales YTD]-SALESLY,SALESLY)
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 92fbe6d1-598c-44ac-a1de-e848ca118f22
+
+	measure 'AVO VS LY' = ```
+			
+			var maxyr = CALCULATE(
+			    MAX('Calendar'[Year]),
+			    FILTER(ALL('Calendar'),
+			    NOT(ISBLANK([Total Revenue])
+			    )))
+			VAR AOVCY=
+			CALCULATE([Average Order Value (TY)],FILTER(ALL('Calendar'[Year]),'Calendar'[Year] = maxyr))
+			VAR AOVLY= 
+			CALCULATE([Average Order Value (TY)],FILTER(ALL('Calendar'[Year]),'Calendar'[Year] = maxyr-1))
+			RETURN
+			DIVIDE(AOVCY-AOVLY,AOVLY)
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: bde816c5-b06f-4423-8345-1aa2d5c95dbb
+
+	measure 'Items Sold Vs LY' = ```
+			
+			    VAR MAXYR = CALCULATE(
+			        MAX(
+			        'Calendar'[Year]),FILTER(
+			            ALL('Calendar'),NOT(ISBLANK([Total Revenue]))
+			        )
+			        
+			    )
+			    VAR CY = CALCULATE(
+			        COUNT(Orders[product_id]),
+			        'Calendar'[Year] = MAXYR,
+			        REMOVEFILTERS(Orders),
+			        REMOVEFILTERS('Calendar'),
+			        REMOVEFILTERS('KPI Selector'[KPI])
+			    )
+			
+			    VAR PY = CALCULATE(
+			        COUNT(Orders[product_id]),
+			        'Calendar'[Year] = MAXYR-1,
+			        REMOVEFILTERS(Orders),
+			        REMOVEFILTERS('Calendar'),
+			         REMOVEFILTERS('KPI Selector'[KPI])
+			
+			    )
+			
+			    RETURN
+			   DIVIDE(CY-PY,PY)
+			   
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 84410220-5d3b-44f7-9322-4a40f6a0ca1f
+
+	measure 'Items Sold' =
+			
+			
+			COUNTX(
+			    Orders,
+			    Orders[product_id]
+			)
+		lineageTag: 0d5ae7ca-3961-443f-a65e-c0200da3039b
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure AOV = AVERAGE(Orders[Total Price])
+		lineageTag: 3ef98e0c-09d2-4a03-b96b-124b1bea7eb7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	partition 'Measures (2)' = m
+		mode: import
+		source =
+				let
+				    Source = Table.FromRows(Json.Document(Binary.Decompress(Binary.FromText("i44FAA==", BinaryEncoding.Base64), Compression.Deflate)), let _t = ((type nullable text) meta [Serialized.Text = true]) in type table [Column1 = _t]),
+				    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", type text}}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Changed Type",{"Column1"})
+				in
+				    #"Removed Columns"
+
+	annotation PBI_ResultType = Table
+
+	annotation PBI_NavigationStepName = Navigation
+

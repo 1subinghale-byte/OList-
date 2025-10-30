@@ -1,0 +1,160 @@
+table Orders
+	lineageTag: a87ed9f1-98f4-4f98-9402-ba1ffde7b1c1
+
+	measure 'Total Orders' = CALCULATE(DISTINCTCOUNT(Orders[order_id]),USERELATIONSHIP('Calendar'[DateId],Orders[PurchaseDateId]))
+		formatString: 0
+		lineageTag: 304874c5-8b50-4c63-a8a1-dce0f1be548d
+
+	column order_id
+		dataType: string
+		lineageTag: f16300e9-cf32-4942-a1a3-88063ace1bf9
+		summarizeBy: none
+		sourceColumn: order_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_unique_id
+		dataType: string
+		lineageTag: 7824524f-9944-4158-9781-5f93891e95d1
+		summarizeBy: none
+		sourceColumn: customer_unique_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column order_status
+		dataType: string
+		lineageTag: f85473bc-a8d9-484b-a9bf-235996b9e199
+		summarizeBy: none
+		sourceColumn: order_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column PurchaseDateId
+		dataType: string
+		lineageTag: 7e1ba00f-8dda-4098-b6e8-128508dbf4e4
+		summarizeBy: none
+		sourceColumn: PurchaseDateId
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrderApprovedDateId
+		dataType: string
+		lineageTag: e3ed708c-2fff-4a07-acf5-57211943f0f2
+		summarizeBy: none
+		sourceColumn: OrderApprovedDateId
+
+		annotation SummarizationSetBy = Automatic
+
+	column DeliveredCarrierDateId
+		dataType: string
+		lineageTag: 7ca707e7-b59c-4913-b53a-7c9dc4dfd21e
+		summarizeBy: none
+		sourceColumn: DeliveredCarrierDateId
+
+		annotation SummarizationSetBy = Automatic
+
+	column DeliverdCustomerDateId
+		dataType: string
+		lineageTag: 1e38233c-2e80-489d-9479-d10a999d4e4d
+		summarizeBy: none
+		sourceColumn: DeliverdCustomerDateId
+
+		annotation SummarizationSetBy = Automatic
+
+	column EstimatedDeliverydateId
+		dataType: string
+		lineageTag: c99c0ebf-67dc-4db1-a244-43c288b61de2
+		summarizeBy: none
+		sourceColumn: EstimatedDeliverydateId
+
+		annotation SummarizationSetBy = Automatic
+
+	column OrderLine
+		dataType: int64
+		formatString: 0
+		lineageTag: d3a12e6b-d4c3-405d-b026-f952cac3affb
+		summarizeBy: sum
+		sourceColumn: OrderLine
+
+		annotation SummarizationSetBy = Automatic
+
+	column product_id
+		dataType: string
+		lineageTag: 0749b404-2cf8-487d-aa0b-8488428985b6
+		summarizeBy: none
+		sourceColumn: product_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column seller_id
+		dataType: string
+		lineageTag: 4af625a7-f299-4d0b-8d84-0f6f6f624e7f
+		summarizeBy: none
+		sourceColumn: seller_id
+
+		annotation SummarizationSetBy = Automatic
+
+	column price
+		dataType: double
+		lineageTag: ad52c6ff-f49a-4c46-bfb2-babdca11450a
+		summarizeBy: sum
+		sourceColumn: price
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column freight_value
+		dataType: double
+		lineageTag: dd084dde-c4fc-48f7-95ba-246b528e7f3c
+		summarizeBy: sum
+		sourceColumn: freight_value
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column ShippingLimitDateId
+		dataType: string
+		lineageTag: 892a9cff-0587-424b-8068-3e788b285b1a
+		summarizeBy: none
+		sourceColumn: ShippingLimitDateId
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Total Price'
+		dataType: decimal
+		formatString: "£"#,0.###############;-"£"#,0.###############;"£"#,0.###############
+		lineageTag: c3acb16c-805a-4c96-9cdf-3cd1632688d9
+		summarizeBy: sum
+		sourceColumn: Total Price
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-GB"}
+
+	partition Orders = m
+		mode: import
+		source =
+				let
+				    Source = Table.NestedJoin(olist_orders_dataset, {"customer_id"}, olist_customers_dataset, {"customer_id"}, "Customer", JoinKind.LeftOuter),
+				    #"Expanded Customer" = Table.ExpandTableColumn(Source, "Customer", {"customer_unique_id"}, {"customer_unique_id"}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Expanded Customer",{"customer_id"}),
+				    #"Reordered Columns" = Table.ReorderColumns(#"Removed Columns",{"order_id", "customer_unique_id", "order_status", "order_purchase_timestamp", "order_approved_at", "order_delivered_carrier_date", "order_delivered_customer_date", "order_estimated_delivery_date"}),
+				    PurchaseDateId = Table.AddColumn(#"Reordered Columns", "PurchaseDateId", each Date.Year([order_purchase_timestamp]) * 10000 + Date.Month([order_purchase_timestamp]) * 100 + Date.Day([order_purchase_timestamp])),
+				    ApprovedDateId = Table.AddColumn(PurchaseDateId, "OrderApprovedDateId", each Date.Year([order_approved_at]) * 10000 + Date.Month([order_approved_at]) * 100 + Date.Day([order_approved_at])),
+				    DeliveredCarriedDateId = Table.AddColumn(ApprovedDateId, "DeliveredCarrierDateId", each Date.Year([order_delivered_carrier_date]) *10000 + Date.Month([order_delivered_carrier_date]) * 100 + Date.Day([order_delivered_carrier_date])),
+				    CustomerDateId = Table.AddColumn(DeliveredCarriedDateId, "DeliverdCustomerDateId", each Date.Year([order_delivered_customer_date]) * 10000 + Date.Month([order_delivered_customer_date]) * 100 + Date.Day([order_delivered_customer_date])),
+				    EstimatedDeliveryDate = Table.AddColumn(CustomerDateId, "EstimatedDeliverydateId", each Date.Year([order_estimated_delivery_date]) * 10000 + Date.Month([order_estimated_delivery_date]) * 100 + Date.Day([order_estimated_delivery_date])),
+				    #"Removed Columns1" = Table.RemoveColumns(EstimatedDeliveryDate,{"order_purchase_timestamp", "order_approved_at", "order_delivered_carrier_date", "order_delivered_customer_date", "order_estimated_delivery_date"}),
+				    #"Merged Queries" = Table.NestedJoin(#"Removed Columns1", {"order_id"}, olist_order_items_dataset, {"order_id"}, "olist_order_items_dataset", JoinKind.LeftOuter),
+				    #"Expanded olist_order_items_dataset" = Table.ExpandTableColumn(#"Merged Queries", "olist_order_items_dataset", {"OrderLine", "product_id", "seller_id", "price", "freight_value", "ShippingLimitDateId"}, {"OrderLine", "product_id", "seller_id", "price", "freight_value", "ShippingLimitDateId"}),
+				    #"Added Custom" = Table.AddColumn(#"Expanded olist_order_items_dataset", "Total Price", each [price] + [freight_value]),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Added Custom",{{"Total Price", Currency.Type}})
+				in
+				    #"Changed Type"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

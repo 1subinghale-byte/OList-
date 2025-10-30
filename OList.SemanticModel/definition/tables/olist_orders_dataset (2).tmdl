@@ -1,0 +1,31 @@
+table 'olist_orders_dataset (2)'
+	isHidden
+	lineageTag: 40502778-fd41-4b3c-9f18-4a39a813efc3
+
+	column order_id
+		dataType: string
+		isHidden
+		lineageTag: bea51a22-9a28-4009-a601-76b2c38237b4
+		summarizeBy: none
+		sourceColumn: order_id
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition 'olist_orders_dataset (2)' = m
+		mode: import
+		source =
+				let
+				    Source = olist_orders_dataset,
+				    #"Removed Other Columns" = Table.SelectColumns(Source,{"order_id"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns", {"order_id"})
+				in
+				    #"Removed Duplicates"
+
+	changedProperty = IsHidden
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

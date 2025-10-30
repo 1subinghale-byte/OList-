@@ -1,0 +1,101 @@
+table Calendar
+	lineageTag: 0a1fdb3e-08ef-4984-85dd-a3f73bf37c1d
+	dataCategory: Time
+
+	column Date
+		dataType: dateTime
+		isKey
+		formatString: Long Date
+		lineageTag: f0624d1a-3e63-4128-a3ce-57886212167c
+		summarizeBy: none
+		sourceColumn: Date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+	column Year
+		dataType: int64
+		formatString: 0
+		lineageTag: 4e9d0eed-4b4d-490a-ad2e-daa639a146ae
+		summarizeBy: none
+		sourceColumn: Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		dataType: int64
+		formatString: 0
+		lineageTag: 6139e179-8781-4bf6-898b-b19f801f4877
+		summarizeBy: none
+		sourceColumn: Month
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quarter
+		dataType: int64
+		formatString: 0
+		lineageTag: cdaf1fd5-dddc-43fa-8b4a-573cf83527b0
+		summarizeBy: none
+		sourceColumn: Quarter
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Week of Year'
+		dataType: int64
+		formatString: 0
+		lineageTag: 23b8b92e-6d52-41e3-9133-fad913c42e52
+		summarizeBy: none
+		sourceColumn: Week of Year
+
+		annotation SummarizationSetBy = Automatic
+
+	column Day
+		dataType: int64
+		formatString: 0
+		lineageTag: e9f2ce4a-12b6-47a8-890b-6bd50642dcea
+		summarizeBy: none
+		sourceColumn: Day
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month Name'
+		dataType: string
+		lineageTag: 155caf32-d167-4e6d-bbbf-161b743c3ffb
+		summarizeBy: none
+		sourceColumn: Month Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column DateId
+		dataType: int64
+		formatString: 0
+		lineageTag: e2580ffe-2227-4a5c-a1c3-fb6d982140ba
+		summarizeBy: none
+		sourceColumn: DateId
+
+		annotation SummarizationSetBy = Automatic
+
+	partition Calendar = m
+		mode: import
+		source =
+				let
+				    Source = List.Dates(#date(2015,01,01),365*5,#duration(1,0,0,0)),
+				    #"Converted to Table" = Table.FromList(Source, Splitter.SplitByNothing(), null, null, ExtraValues.Error),
+				    #"Inserted Year" = Table.AddColumn(#"Converted to Table", "Year", each Date.Year([Column1]), Int64.Type),
+				    #"Inserted Month" = Table.AddColumn(#"Inserted Year", "Month", each Date.Month([Column1]), Int64.Type),
+				    #"Inserted Quarter" = Table.AddColumn(#"Inserted Month", "Quarter", each Date.QuarterOfYear([Column1]), Int64.Type),
+				    #"Inserted Week of Year" = Table.AddColumn(#"Inserted Quarter", "Week of Year", each Date.WeekOfYear([Column1]), Int64.Type),
+				    #"Inserted Day" = Table.AddColumn(#"Inserted Week of Year", "Day", each Date.Day([Column1]), Int64.Type),
+				    #"Inserted Month Name" = Table.AddColumn(#"Inserted Day", "Month Name", each Date.MonthName([Column1]), type text),
+				    #"Renamed Columns" = Table.RenameColumns(#"Inserted Month Name",{{"Column1", "Date"}}),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Renamed Columns",{{"Date", type date}}),
+				    #"Added Custom" = Table.AddColumn(#"Changed Type", "DateId", each Date.Year([Date]) * 10000 + Date.Month([Date]) * 100 + Date.Day([Date])),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Added Custom",{{"DateId", Int64.Type}})
+				in
+				    #"Changed Type1"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
